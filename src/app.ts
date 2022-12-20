@@ -14,17 +14,19 @@ const main = async () => {
         isSaved: boolean;
     }[] = fs.existsSync(URL_LIST_JSON) ?
         JSON.parse(fs.readFileSync(URL_LIST_JSON, {encoding: 'utf-8'})) :
-        fs.readFileSync(URL_LIST_TEXT, {encoding: 'utf-8'}).split('\n').map(l => {
+        fs.readFileSync(URL_LIST_TEXT, {encoding: 'utf-8'}).trim().split('\n').map(l => {
             return {
-                url: l,
+                url: l.trim(),
                 archiveUrl: null,
                 isSaved: false
             };
         });
+    
+    const saveJson = () => fs.writeFileSync(URL_LIST_JSON, JSON.stringify(urlList, null, 2));
 
     // 落ちても進捗は保存する
     ['SIGINT', 'SIGQUIT', 'SIGTERM'].forEach(eventName => process.on(eventName, () => {
-        fs.writeFileSync(URL_LIST_JSON, JSON.stringify(urlList));
+        saveJson();
         console.log('Stop.');
         process.exit();
     }));
@@ -38,8 +40,11 @@ const main = async () => {
             urlList[index].isSaved = await save(url);
             if (!urlList[index].isSaved) {
                 console.error('Save error...');
+                console.log('Waiting...');
+                await sleep(5000);
                 continue;
             }
+            saveJson();
             console.log('Save success!');
             console.log('Waiting...');
             await sleep(5000);
@@ -53,11 +58,12 @@ const main = async () => {
                 console.error('Failed get archive URL...');
                 continue;
             }
+            saveJson();
             console.log('Archive URL: ' + urlList[index].archiveUrl);
         }
     }
 
-    fs.writeFileSync(URL_LIST_JSON, JSON.stringify(urlList));
+    saveJson();
     console.log('Done.');
 };
 
