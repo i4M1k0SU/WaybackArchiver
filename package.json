@@ -4,7 +4,8 @@
   "description": "Wayback Machine Tool",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/app.ts"
+    "start": "ts-node src/app.ts",
+    "verify": "ts-node src/verify.ts"
   },
   "author": "i4M1k0SU",
   "license": "MIT",
