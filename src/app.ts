@@ -37,7 +37,12 @@ const main = async () => {
         // 未save・当然ArchiveURL未取得
         if (!urlList[index].isSaved) {
             console.log('Saving URL: ' + url);
-            urlList[index].isSaved = await save(url);
+            try {
+                urlList[index].isSaved = await save(url);
+            }
+            catch (e) {
+                console.log(`Error: ${e}`);
+            }
             if (!urlList[index].isSaved) {
                 console.error('Save error...');
                 console.log('Waiting...');
@@ -53,7 +58,12 @@ const main = async () => {
         // save済み・ArchiveURL未取得
         if (urlList[index].isSaved && urlList[index].archiveUrl === null) {
             console.log('Get archive URL: ' + url);
-            urlList[index].archiveUrl = await getArchiveUrl(url, 'Identity');
+            try {
+                urlList[index].archiveUrl = await getArchiveUrl(url, 'Identity');
+            }
+            catch (e) {
+                console.log(`Error: ${e}`);
+            }
             if (urlList[index].archiveUrl === null) {
                 console.error('Failed get archive URL...');
                 continue;

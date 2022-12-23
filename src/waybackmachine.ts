@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, {AxiosError} from 'axios';
 
 const SAVE_PREFIX = 'https://web.archive.org/save/';
 const AVAILABLE = 'https://archive.org/wayback/available';
@@ -27,10 +27,18 @@ type AvailableResponse = {
 };
 
 export const save = async (url: string): Promise<boolean> => {
-    const response = await axios.get(SAVE_PREFIX + url).catch(() => null);
+    const response = await axios.get(SAVE_PREFIX + url).catch((e: AxiosError) => e);
 
-    if (response === null || response.status !== 200) {
-        return false;
+    if (response.status === 404) {
+        throw new Error('Server Error');
+    }
+
+    if (response.status === 429) {
+        throw new Error('Too Many Requests');
+    }
+
+    if (response.status !== 200) {
+        throw new Error(`Unknown Error ${response.status}`);
     }
 
     return true;
@@ -39,10 +47,10 @@ export const save = async (url: string): Promise<boolean> => {
 export const getArchiveUrl = async (url: string, mode: ArchiveUrlMode = 'Default'): Promise<string | null> => {
     const response = await axios.get<AvailableResponse>(AVAILABLE, {
         params: {url}
-    }).catch(() => null);
+    }).catch((e: AxiosError) => e);
 
-    if (response === null || response.status !== 200) {
-        return null;
+    if (response.status !== 200 || !('data' in response)) {
+        throw new Error(`API Error ${response.status}`);
     }
 
     const closest = response.data.archived_snapshots.closest;
